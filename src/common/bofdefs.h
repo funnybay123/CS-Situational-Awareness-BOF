@@ -114,6 +114,8 @@ DECLSPEC_IMPORT ULONG WINAPI IPHLPAPI$GetIpNetTable(PMIB_IPNETTABLE IpNetTable, 
 DECLSPEC_IMPORT DWORD WINAPI IPHLPAPI$GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, ULONG ulAf, TCP_TABLE_CLASS TableClass, ULONG Reserved);
 DECLSPEC_IMPORT DWORD WINAPI IPHLPAPI$GetExtendedUdpTable(PVOID pUdpTable, PDWORD pdwSize, BOOL bOrder, ULONG ulAf, UDP_TABLE_CLASS TableClass, ULONG Reserved);
 DECLSPEC_IMPORT ULONG WINAPI IPHLPAPI$GetAdaptersAddresses(ULONG Family, ULONG Flags, PVOID Reserved, PVOID AdapterAddresses, PULONG SizePointer);
+DECLSPEC_IMPORT DWORD WINAPI IPHLPAPI$GetIfTable2(PVOID *Table);
+DECLSPEC_IMPORT void  WINAPI IPHLPAPI$FreeMibTable(PVOID Memory);
 
 //MSVCRT
 WINBASEAPI char* __cdecl MSVCRT$_ultoa(unsigned long _Value, char* _Dest, int _Radix);
@@ -593,6 +595,8 @@ DECLSPEC_IMPORT WINBOOL WINAPI VERSION$VerQueryValueA(LPCVOID pBlock, LPCSTR lpS
 #define IPHLPAPI$GetExtendedTcpTable GetExtendedTcpTable
 #define IPHLPAPI$GetExtendedUdpTable GetExtendedUdpTable
 #define IPHLPAPI$GetAdaptersAddresses GetAdaptersAddresses
+#define IPHLPAPI$GetIfTable2 GetIfTable2
+#define IPHLPAPI$FreeMibTable FreeMibTable
 #define MSVCRT$calloc calloc
 #define MSVCRT$memcpy memcpy
 #define MSVCRT$memcmp memcmp

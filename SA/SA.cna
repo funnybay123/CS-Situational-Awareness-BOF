@@ -1825,7 +1825,17 @@ alias sha1 {
     beacon_inline_execute($1, $data, "go", $args);
 }
 beacon_command_register(
-	"sha1", 
-	"Returns the sha1 hash of the selected file for integrity checks.", 
+	"sha1",
+	"Returns the sha1 hash of the selected file for integrity checks.",
 	"Usage: sha1 <filename>"
+);
+
+alias ifinfo {
+	beacon_inline_execute($1, readbof($1, "ifinfo", $null, "T1016"), "go", $null);
+}
+
+beacon_command_register(
+	"ifinfo",
+	"List detailed network interface info and traffic statistics",
+	"Synopsis: ifinfo\n\nLists all network interfaces with speed, MTU, status, MAC, and traffic statistics (bytes/packets sent/received, errors, discards)."
 );
