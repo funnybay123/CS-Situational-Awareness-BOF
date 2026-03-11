@@ -180,25 +180,25 @@ static const char* mediaconnect_to_str(DWORD state)
 static void format_speed(ULONG64 bps, char* buf, int buflen)
 {
     if (bps >= 1000000000ULL)
-        MSVCRT$sprintf(buf, "%llu.%llu Gbps", (unsigned long long)(bps / 1000000000ULL), (unsigned long long)((bps % 1000000000ULL) / 100000000ULL));
+        MSVCRT$sprintf(buf, "%I64u.%I64u Gbps", (unsigned __int64)(bps / 1000000000ULL), (unsigned __int64)((bps % 1000000000ULL) / 100000000ULL));
     else if (bps >= 1000000ULL)
-        MSVCRT$sprintf(buf, "%llu Mbps", (unsigned long long)(bps / 1000000ULL));
+        MSVCRT$sprintf(buf, "%I64u Mbps", (unsigned __int64)(bps / 1000000ULL));
     else if (bps >= 1000ULL)
-        MSVCRT$sprintf(buf, "%llu Kbps", (unsigned long long)(bps / 1000ULL));
+        MSVCRT$sprintf(buf, "%I64u Kbps", (unsigned __int64)(bps / 1000ULL));
     else
-        MSVCRT$sprintf(buf, "%llu bps", (unsigned long long)bps);
+        MSVCRT$sprintf(buf, "%I64u bps", (unsigned __int64)bps);
 }
 
 static void format_bytes(ULONG64 bytes, char* buf, int buflen)
 {
     if (bytes >= (1024ULL * 1024 * 1024))
-        MSVCRT$sprintf(buf, "%llu.%llu GB", (unsigned long long)(bytes / (1024ULL * 1024 * 1024)), (unsigned long long)((bytes % (1024ULL * 1024 * 1024)) / (1024ULL * 1024 * 100)));
+        MSVCRT$sprintf(buf, "%I64u.%I64u GB", (unsigned __int64)(bytes / (1024ULL * 1024 * 1024)), (unsigned __int64)((bytes % (1024ULL * 1024 * 1024)) / (1024ULL * 1024 * 100)));
     else if (bytes >= (1024ULL * 1024))
-        MSVCRT$sprintf(buf, "%llu.%llu MB", (unsigned long long)(bytes / (1024ULL * 1024)), (unsigned long long)((bytes % (1024ULL * 1024)) / (1024ULL * 100)));
+        MSVCRT$sprintf(buf, "%I64u.%I64u MB", (unsigned __int64)(bytes / (1024ULL * 1024)), (unsigned __int64)((bytes % (1024ULL * 1024)) / (1024ULL * 100)));
     else if (bytes >= 1024ULL)
-        MSVCRT$sprintf(buf, "%llu KB", (unsigned long long)(bytes / 1024ULL));
+        MSVCRT$sprintf(buf, "%I64u KB", (unsigned __int64)(bytes / 1024ULL));
     else
-        MSVCRT$sprintf(buf, "%llu B", (unsigned long long)bytes);
+        MSVCRT$sprintf(buf, "%I64u B", (unsigned __int64)bytes);
 }
 
 void ifinfo()
@@ -214,6 +214,19 @@ void ifinfo()
         return;
     }
 
+    if (pTable == NULL)
+    {
+        BeaconPrintf(CALLBACK_ERROR, "GetIfTable2 returned NULL table");
+        return;
+    }
+
+    if (pTable->NumEntries == 0)
+    {
+        internal_printf("No network interfaces found.\n");
+        IPHLPAPI$FreeMibTable(pTable);
+        return;
+    }
+
     internal_printf("\n===== Network Interface Information =====\n");
     internal_printf("Total interfaces: %lu\n\n", pTable->NumEntries);
 
@@ -222,7 +235,7 @@ void ifinfo()
         MY_MIB_IF_ROW2 *row = &pTable->Table[i];
         char *alias = NULL;
         char *desc = NULL;
-        char macStr[64] = {0};
+        char macStr[100] = {0};
         char txSpeed[64] = {0};
         char rxSpeed[64] = {0};
         char inBytes[64] = {0};
@@ -245,16 +258,15 @@ void ifinfo()
         /* MAC address */
         if (row->PhysicalAddressLength > 0 && row->PhysicalAddressLength <= IF_MAX_PHYS_ADDRESS_LENGTH)
         {
-            macStr[0] = '\0';
-            for (j = 0; j < row->PhysicalAddressLength; j++)
+            int pos = 0;
+            for (j = 0; j < row->PhysicalAddressLength && pos < (int)sizeof(macStr) - 4; j++)
             {
-                char tmp[4];
                 if (j > 0)
-                    MSVCRT$sprintf(tmp, "-%02X", row->PhysicalAddress[j]);
+                    pos += MSVCRT$sprintf(macStr + pos, "-%02X", row->PhysicalAddress[j]);
                 else
-                    MSVCRT$sprintf(tmp, "%02X", row->PhysicalAddress[j]);
-                MSVCRT$strcat(macStr, tmp);
+                    pos += MSVCRT$sprintf(macStr + pos, "%02X", row->PhysicalAddress[j]);
             }
+            macStr[sizeof(macStr) - 1] = '\0';
             internal_printf("  Physical Address: %s\n", macStr);
         }
 
@@ -272,14 +284,14 @@ void ifinfo()
         format_bytes(row->InOctets, inBytes, sizeof(inBytes));
         format_bytes(row->OutOctets, outBytes, sizeof(outBytes));
         internal_printf("  --- Traffic Statistics ---\n");
-        internal_printf("  Bytes In:         %s (%llu)\n", inBytes, (unsigned long long)row->InOctets);
-        internal_printf("  Bytes Out:        %s (%llu)\n", outBytes, (unsigned long long)row->OutOctets);
-        internal_printf("  Packets In:       %llu (unicast)\n", (unsigned long long)row->InUcastPkts);
-        internal_printf("  Packets Out:      %llu (unicast)\n", (unsigned long long)row->OutUcastPkts);
-        internal_printf("  Errors In:        %llu\n", (unsigned long long)row->InErrors);
-        internal_printf("  Errors Out:       %llu\n", (unsigned long long)row->OutErrors);
-        internal_printf("  Discards In:      %llu\n", (unsigned long long)row->InDiscards);
-        internal_printf("  Discards Out:     %llu\n", (unsigned long long)row->OutDiscards);
+        internal_printf("  Bytes In:         %s (%I64u)\n", inBytes, (unsigned __int64)row->InOctets);
+        internal_printf("  Bytes Out:        %s (%I64u)\n", outBytes, (unsigned __int64)row->OutOctets);
+        internal_printf("  Packets In:       %I64u (unicast)\n", (unsigned __int64)row->InUcastPkts);
+        internal_printf("  Packets Out:      %I64u (unicast)\n", (unsigned __int64)row->OutUcastPkts);
+        internal_printf("  Errors In:        %I64u\n", (unsigned __int64)row->InErrors);
+        internal_printf("  Errors Out:       %I64u\n", (unsigned __int64)row->OutErrors);
+        internal_printf("  Discards In:      %I64u\n", (unsigned __int64)row->InDiscards);
+        internal_printf("  Discards Out:     %I64u\n", (unsigned __int64)row->OutDiscards);
         internal_printf("\n");
 
         if (alias) intFree(alias);
