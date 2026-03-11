@@ -1839,3 +1839,16 @@ beacon_command_register(
 	"List detailed network interface info and traffic statistics",
 	"Synopsis: ifinfo\n\nLists all network interfaces with speed, MTU, status, MAC, and traffic statistics (bytes/packets sent/received, errors, discards)."
 );
+
+alias domaintrusts {
+	local('$args $server');
+	$server = iff(-istrue $2, $2, "");
+	$args = bof_pack($1, "Z", $server);
+	beacon_inline_execute($1, readbof($1, "domaintrusts", $null, "T1482"), "go", $args);
+}
+
+beacon_command_register(
+	"domaintrusts",
+	"Enumerate domain trust relationships",
+	"Synopsis: domaintrusts [opt: server]\n\nEnumerates all domain trusts similar to nltest /domain_trusts /all_trusts."
+);
